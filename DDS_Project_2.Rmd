@@ -1,0 +1,789 @@
+---
+title: "DDSAnalytics"
+author: "Paul Huggins"
+date: "3/22/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+```
+
+#### Introduction: Below you will find the analysis for the attrition dataset. The goal was to determine what causes employee attrition and subsequently build a model to predict it. The data was supplied by the company and consisted of 35 variables, each with a uniqie value for the employee it is referencing. There were no missing variables in the dataset and the variables consisted of both numeric and categorical forms. 
+
+### Project Goals:
+#### Identify the top three factors leading to attrition
+#### Analyze job specific trends
+#### Build a model to predict attrition and monthly income
+
+### Link to video presentation: https://youtu.be/N5Ybft-DrBI
+
+```{r include=FALSE}
+library(stringr)
+library(plotly)
+library(Hmisc)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(plyr)
+library(reshape2)
+library(corrplot)
+library(GGally)
+library(PerformanceAnalytics)
+library(formattable)
+library(data.table)
+library(jsonlite)
+library(RCurl)
+library(class)
+library(httr)
+library(caret)
+library(e1071)
+library(magrittr)
+library(gridExtra)
+library(qwraps2)
+```
+
+## Load in CSV's. View the format of the data.
+```{r include=TRUE}
+# Read in Data
+data <- read.csv("D:/MS Data Science/SMU/6306 - Doing Data Science/Project 2/CaseStudy2-data.csv", header = TRUE)
+
+# Variable Formats of data
+str(data)
+```
+---
+
+## Converting all categorical variables into numeric to be used for analysis using the folowing assignments:
+#### Attrition: 1 = No, 2 = Yes
+#### Business Travel: 1 = Non-Travel, 2 = Travel Frequently, 3 = Travel Rarely
+#### Department: 1 = Human Resources, 2 = Research & Development, 3 = Sales
+#### Education Field: 1 = Human Resources, 2 = Life Sciences, 3 = Marketing, 4 = Medical, 5 = Other, 6 = Technical Degree
+#### Gender: 1 = Female, 2 = Male
+#### Job Role: 1 = Healthcare Representative, 2 = Human Resources, 3 = Laboratory Technician, 4 = Manager, 5 = Manufacturing Director, 6 = Research Director, 7 = Research Scientist, 8 = Sales Executive, 9 = Sales Representative
+#### Marital Status: 1 = Divorced, 2 = Married, 3 = Single
+#### Over 18: 1 = Yes
+#### Overtime: 1 = No, 2 = Yes
+```{r include=TRUE}
+must_convert <- sapply(data,is.factor)          # logical vector telling if a variable needs to be displayed as numeric
+data2 <- sapply(data[,must_convert],unclass)    # data.frame of all categorical variables now displayed as numeric
+datanum <- cbind(data[,!must_convert],data2)   # complete data.frame with all variables put together
+
+datanum <- datanum[,order(colnames(datanum))] # re-order columns alphabetically
+```
+---
+
+## What is the base Attrition rate?
+```{r}
+# Verify that there are 0 NA's in the dataset
+# na_count <- sum(is.na(datanum$Attrition))
+
+# N/A Count
+# print('Number of NA\'s in attrition column:')
+# print(sum(na_count))
+
+## Total Number of Employees
+# print(length(datanum$Attrition))
+print('There are 870 Employees in the data set')
+# print(length(datanum$Attrition))
+
+# Sum of Employees who quit
+# print(sum(datanum$Attrition == "2"))
+print('Number of Employees that quit: 140')
+
+# Sum of Employees who did not quit
+# print(sum(datanum$Attrition == "1"))
+print('Number of Employees that did not quit: 730')
+
+## Calculating the % of employees that did and did not quit
+baseattrratioquit <- (sum(datanum$Attrition == "2")) / length(datanum$Attrition)
+baseattrratiostay <- (sum(datanum$Attrition == "1")) / length(datanum$Attrition)
+# print(baseattrratioquit*100)
+print('Percent of Employees that quit: 16.09%')
+
+# print(baseattrratiostay*100)
+print('Percent of Employees that did not quit: 83.91%')
+```
+---
+
+## Let's begin by looking broadly at Attrition by Job Role.
+```{r include=TRUE}
+# Recode job roles to short abbreviations for graphing
+data$JobRole_short <- recode(data$JobRole, "Healthcare Representative" = "Health Rep","Human Resources"="HR","Laboratory Technician"="Lab Tech","Manufacturing Director"="Mfg Dir","Research Director"="Res Dir","Research Scientist"="Res Sci","Sales Executive"="Sales Exec","Sales Representative"="Sales Rep", .default=levels(data$JobRole))
+
+# Graph
+ggplot(data,aes(Attrition, group=JobRole_short)) + 
+  geom_bar(aes(y=..prop.., fill=factor(..x..)),stat="count") + 
+  scale_y_continuous(labels=scales::percent, breaks = c(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0)) + 
+  ylab("Frequencies") + 
+  xlab("Attrition") + 
+  facet_grid(~JobRole_short) + 
+  theme(legend.position="none") + 
+  ggtitle("Job Roles and Attrition") + 
+  scale_fill_discrete(name="Attrition",
+                         breaks=c("1", "2"),
+                         labels=c("No", "Yes")) +
+  theme_bw()
+```
+---
+#### Sales Representatives have the highest attrition rate at 45%. Manufacturing Directors and Research Directors have the lowest at lesss than 5%.
+
+## Correlation - Which descriptive measures can be used to predict Attrition?
+```{r include=TRUE}
+cor1 <- cor(datanum[-2], datanum$Attrition) # correlate each varaible to attrition
+cor1
+```
+#### The top 3 indicators of attrition are: Overtime (0.27), Marrital Status (-0.19) and Job Involvement (-0.18).
+
+```{r include=FALSE}
+# Top 3 Attrition correlation plot - NOT KNITTED TO HTML!.
+Corr3cols <- c("Attrition","OverTime","JobInvolvement","MaritalStatus")
+Corr3 <- datanum[Corr3cols]
+chart.Correlation(Corr3, histogram=TRUE, pch=19)
+```
+---
+
+## Lets start with Overtime and Attrition.
+```{r include=TRUE, echo=FALSE}
+# Percentages of Group 1
+data_percOTAN <- datanum %>%
+  group_by(Attrition, OverTime) %>%
+  dplyr::summarise(n = n())
+data_percOTAN1 <- subset(data_percOTAN, data_percOTAN$Attrition == "1")
+data_percOTAN1P <- data_percOTAN1 %>%
+  group_by(Attrition, OverTime) %>%
+  ungroup() %>%
+  mutate(freq = n / sum(n))
+data_percOTAN1P$freq <- percent(data_percOTAN1P$freq)
+
+# Percentaes of Group 2
+data_percOTAY <- datanum %>%
+  group_by(Attrition, OverTime) %>%
+  dplyr::summarise(n = n())
+data_percOTAY2 <- subset(data_percOTAY, data_percOTAY$Attrition == "2")
+data_percOTAY2P <- data_percOTAY2 %>%
+  group_by(Attrition, OverTime) %>%
+  ungroup() %>%
+  mutate(freq = n / sum(n))
+data_percOTAY2P$freq <- percent(data_percOTAY2P$freq)
+
+data_OTAGRAPH <- rbind(data_percOTAN1P, data_percOTAY2P)
+
+# Graph results
+ggplot(data_OTAGRAPH, aes(x=Attrition, y=freq, fill= factor(OverTime))) + 
+    geom_bar(position = "fill",stat = "identity", width = 0.7) +
+    labs(title = 'Attrition Rate by Overtime', y='Ratio of Attrition', x='Attrition') +
+    geom_text(aes(label = freq), position = position_fill(vjust = 0.5)) +
+    guides(fill=guide_legend(title="Overtime")) +
+    scale_y_continuous(breaks = c(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0)) +
+    scale_x_continuous(breaks = c(1,2), labels = c("No", "Yes")) + 
+    scale_fill_discrete(name="OverTime",
+                         breaks=c("2", "1"),
+                         labels=c("Yes", "No")) + 
+    theme(legend.title=element_text(size = 9),plot.title=element_text(hjust=0.5)) + 
+    theme_bw()
+```
+---
+#### Employees that work Overtime have an attrition rate that is 34.58% higher than employees that do not work overtime.
+
+## Secondly, let's look at Marital Status and Attrition.
+```{r}
+# No Attrition
+data_percMSDN <- datanum %>%
+  group_by(Attrition, MaritalStatus) %>%
+  dplyr::summarise(n = n())
+data_percMSDN1 <- subset(data_percMSDN, data_percMSDN$Attrition == "1")
+data_percMSDN1P <- data_percMSDN1 %>%
+  group_by(Attrition, MaritalStatus) %>%
+  ungroup() %>%
+  mutate(freq = n / sum(n))
+data_percMSDN1P$freq <- percent(data_percMSDN1P$freq)
+
+# Yes Attrition
+data_percMSMN <- datanum %>%
+  group_by(Attrition, MaritalStatus) %>%
+  dplyr::summarise(n = n())
+data_percMSMN1 <- subset(data_percMSMN, data_percMSMN$Attrition == "2")
+data_percMSMN1P <- data_percMSMN1 %>%
+  group_by(Attrition, MaritalStatus) %>%
+  ungroup() %>%
+  mutate(freq = n / sum(n))
+data_percMSMN1P$freq <- percent(data_percMSMN1P$freq)
+
+# Bind data sets
+data_MSAGraph <- rbind(data_percMSDN1P, data_percMSMN1P)
+
+# Graph
+ggplot(data_MSAGraph, aes(x=Attrition, y=freq, fill= factor(MaritalStatus))) + 
+    geom_bar(position = "fill",stat = "identity", width = 0.7) +
+    labs(title = 'Attrition Rate by Marital Status', y='Ratio of Attrition', x='Attrition') +
+    geom_text(aes(label = freq), position = position_fill(vjust = 0.5)) +
+    guides(fill=guide_legend(title="Overtime"))+
+    scale_y_continuous(breaks = c(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0)) + 
+    scale_x_continuous(breaks = c(1,2), labels = c("No", "Yes")) +
+    scale_fill_discrete(name="Marital Status",
+                         breaks=c("1", "2", "3"),
+                         labels=c("Divorced", "Married", "Single")) + 
+    theme(legend.title=element_text(size = 9),plot.title=element_text(hjust=0.5)) + 
+    theme_bw()
+```
+---
+#### The plot would suggest that single employees have a higher rate of attrition by about 22% and divorced employees have a lower rate of attrition. There is no significant change in attrition for married employees.
+
+## Thirdly, Job Involvement and Attrition.
+```{r}
+# No Attrition
+data_percJIN <- datanum %>%
+  group_by(Attrition, JobInvolvement) %>%
+  dplyr::summarise(n = n())
+data_percJIN1 <- subset(data_percJIN, data_percJIN$Attrition == "1")
+data_percJIN1P <- data_percJIN1 %>%
+  group_by(Attrition, JobInvolvement) %>%
+  ungroup() %>%
+  mutate(freq = n / sum(n))
+data_percJIN1P$freq <- percent(data_percJIN1P$freq)
+
+# Yes Attrition
+data_percJIY <- datanum %>%
+  group_by(Attrition, JobInvolvement) %>%
+  dplyr::summarise(n = n())
+data_percJIY1 <- subset(data_percJIY, data_percJIY$Attrition == "2")
+data_percJIY1P <- data_percJIY1 %>%
+  group_by(Attrition, JobInvolvement) %>%
+  ungroup() %>%
+  mutate(freq = n / sum(n))
+data_percJIY1P$freq <- percent(data_percJIY1P$freq)
+
+# Bind data sets
+data_JIGraph <- rbind(data_percJIN1P, data_percJIY1P)
+
+# Graph
+ggplot(data_JIGraph, aes(x=Attrition, y=freq, fill= factor(JobInvolvement))) + 
+    geom_bar(position = "fill",stat = "identity", width = 0.7) +
+    labs(title = 'Attrition Rate by Job Involvement', y='Ratio of Attrition', x='Attrition') + 
+    scale_x_continuous(breaks = c(1,2), labels = c("No", "Yes")) + 
+    geom_text(aes(label = freq), position = position_fill(vjust = 0.5)) +
+    guides(fill=guide_legend(title="Job Involvement")) +
+    scale_y_continuous(breaks = c(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0)) + 
+    theme(legend.title=element_text(size = 9),plot.title=element_text(hjust=0.5)) + 
+    theme_bw()
+```
+---
+#### Employees with a job involvement score of 1 and 2 show an increase in attrition rate. Employees with a job score of 3 and 4 show a decrease in attrition.
+
+## Correlation plot of the other 7 variables with a strong relationship to attrition for reference.
+```{r include=TRUE}
+# Other 7 Attrition correlations
+Corr7cols <- c("Attrition","Age","JobLevel","MonthlyIncome","StockOptionLevel","TotalWorkingYears","YearsInCurrentRole","YearsWithCurrManager")
+Corr7 <- datanum[Corr7cols]
+chart.Correlation(Corr7, histogram=TRUE, pch=19)
+```
+---
+#### Some other variables worth exploring are Total Working Years, Years in Current Role and Job Role.
+
+## Total Working Years and Attrition
+```{r}
+# Subset to only show 
+dataAttr <- subset(data, data$Attrition == "Yes")
+
+# Graph
+ggplot(dataAttr,aes(TotalWorkingYears, group=Attrition)) + 
+  geom_bar(aes(y=..prop.., fill=factor(..x..)),stat="count", show.legend = FALSE) + 
+  scale_y_continuous(labels=scales::percent) + 
+  scale_x_continuous(breaks = c(0,5,10,15,20,25,30,35,40)) + 
+  ylab("Relative Frequencies") + 
+  xlab("Total Working Years") +
+  ggtitle("Total Working Years and Attrition") + 
+  theme_bw()
+
+```
+---
+#### Employees with fewer working years had a higher percentage chance of leaving the company.
+
+## Years in Current Role and Attrition
+```{r}
+# Subset to only show 
+dataAttr <- subset(data, data$Attrition == "Yes")
+
+# Graph
+ggplot(dataAttr,aes(YearsInCurrentRole, group=Attrition)) + 
+  geom_bar(aes(y=..prop.., fill=factor(..x..)),stat="count", show.legend = FALSE) + 
+  scale_y_continuous(labels=scales::percent) + 
+  scale_x_continuous(breaks = c(0,2,4,6,8,10,12,14,16)) + 
+  ylab("Relative Frequencies") + 
+  xlab("Years In Current Role") +
+  ggtitle("Years In Current Role and Attrition") + 
+  theme_bw()
+```
+---
+#### Employees who were with the company for less than a year, 2 years and 7 years had the highest attrition rates.
+
+## Job Role and Attrition
+```{r}
+# No Attrition
+data_percJRN <- datanum %>%
+  group_by(Attrition, JobRole) %>%
+  dplyr::summarise(n = n())
+data_percJRN1 <- subset(data_percJRN, data_percJRN$Attrition == "1")
+data_percJRN1P <- data_percJRN1 %>%
+  group_by(Attrition, JobRole) %>%
+  ungroup() %>%
+  mutate(freq = n / sum(n))
+data_percJRN1P$freq <- percent(data_percJRN1P$freq)
+
+# Yes Attrition
+data_percJRY <- datanum %>%
+  group_by(Attrition, JobRole) %>%
+  dplyr::summarise(n = n())
+data_percJRY1 <- subset(data_percJRY, data_percJRY$Attrition == "2")
+data_percJRY1P <- data_percJRY1 %>%
+  group_by(Attrition, JobRole) %>%
+  ungroup() %>%
+  mutate(freq = n / sum(n))
+data_percJRY1P$freq <- percent(data_percJRY1P$freq)
+
+# Bind data sets
+data_JRGraph <- rbind(data_percJRN1P, data_percJRY1P)
+
+# Graph
+ggplot(data_JRGraph, aes(Attrition, freq, fill=factor(JobRole))) + 
+  geom_bar(stat = "identity", position = 'fill', width = 0.7) + 
+  labs(title = 'Attrition Rate by Job Role', y='Ratio of Attrition', x='Attrition') +
+  guides(fill=guide_legend(title="Job Role")) + 
+  scale_x_continuous(breaks = c(1,2), labels = c("No", "Yes")) + 
+  geom_text(aes(label = freq), position = position_fill(vjust = 0.5), size = 3) +
+  scale_fill_discrete(name="Job Role",
+                         breaks=c("1","2","3","4","5","6","7","8","9"),
+                         labels=c("Healthcare Rep", "Human Resources", "Laboratory Technician", "Manager", "Manufacturing Director", "Research Director", "Research Scientist", "Sales Executive", "Sales Rep")) + 
+  scale_y_continuous(breaks = c(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0)) + theme_bw()
+```
+---
+#### Sales Representatives and Laboratory Technicians have the largest percentage chance of leaving the company. These can sometimes be highturnover positions in the indsutry, but that is not stated in the company context.
+
+# Job Role Specific Trends
+## Correlation - What variables provide the most information about Job Role?
+```{r include=TRUE}
+cor(datanum[-17], datanum$JobRole) # correlate each varaible to attrition
+```
+#### The top 3 descriptors of Job Role are: Department (0.66), Total Working Years (-0.13) and Age (-0.10).
+#### Department and Job Role go hand in hand so we will not explore this relationship. We will explore Total Working Years, Age, Gender and Overtime.
+
+## Job Roles and Total Working Years
+```{r}
+ggplot(data, aes(x = TotalWorkingYears, color = JobRole, fill = JobRole)) +
+  geom_density(alpha = 0.3) + 
+  scale_x_continuous(breaks = c(0,5,10,15,20,25,30,35,40)) + 
+  ylab("Density") + 
+  xlab("Total Working Years") +
+  ggtitle("Total Working Years and Job Role") +
+  theme_bw()
+```
+---
+#### Sales Representatives have the lowest average Total Working Years. This might attribute to the higher attrition rates seen previously. Manufacturing Directors and Research Directors have accumulated the most Total Working Years.
+
+## Job Roles and Age
+```{r}
+ggplot(data, aes(x = Age, color = JobRole, fill = JobRole)) +
+  geom_density(alpha = 0.3) + 
+  scale_x_continuous(breaks = c(0,5,10,15,20,25,30,35,40,45,50,55,60,65)) + 
+  ylab("Density") + 
+  xlab("Age") +
+  ggtitle("Age and Job Role") +
+  theme_bw()
+```
+---
+#### There is a faily even distribution of the average ages per job role. The only exception is Managers who have a higher average age of around 47. Laboratory Technicians have the lowest average age of around 28.
+
+## Job Roles and Gender
+```{r}
+data$Gender_short <- recode(data$Gender, "Female" ="F","Male"="M",.default=levels(data$Gender_short))
+
+ggplot(data,aes(Gender_short, group=JobRole_short)) + 
+  geom_bar(aes(y=..prop.., fill=factor(..x..)),stat="count") + 
+  scale_y_continuous(labels=scales::percent, breaks = c(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0)) + 
+  ylab("Frequencies") + 
+  xlab("Gender") + 
+  facet_grid(~JobRole_short) + 
+  theme(legend.position="none") + 
+  ggtitle("Job Roles and Gender") + 
+  scale_fill_discrete(name="Gender",
+                         breaks=c("1", "2"),
+                         labels=c("Female", "Male")) +
+  theme_bw()
+```
+---
+#### There is fairly even gender equality in management roles (Manager, Director). Human Resources, Laboratory Technicians, Research Scientists & Sales Executives are predominantly male roles. 
+
+## Job Roles Summary - Averages
+```{r}
+# Total number of employees for QC
+totalempl <- length(datanum$Attrition)
+
+# Number of Employees Who worked Overtime for QC
+workedOT <- sum(data$OverTime == "Yes")
+noworkOT <- sum(data$OverTime == "No")
+
+# Calculating the % of employees that worked Overtime for QC
+Overtime_perc <- percent(workedOT/totalempl)
+
+# Which Job Roles worked the most Overtime
+data$OverTime <- as.integer(data$OverTime)
+
+data_OTY <- data %>%
+  filter(OverTime == 2) %>%
+  select(JobRole, OverTime)
+OT2 <- aggregate(data_OTY$OverTime, list(data_OTY$JobRole), FUN=sum)
+
+data_OTN <- data %>%
+  filter(OverTime == 1) %>%
+  select(JobRole, OverTime)
+OT1 <- aggregate(data_OTN$OverTime, list(data_OTN$JobRole), FUN=sum)
+
+merge <- cbind(OT2, OT1)
+names(merge)[1] <- paste("Job Role")
+names(merge)[2] <- paste("Yes_OverTime")
+names(merge)[3] <- paste("delete")
+names(merge)[4] <- paste("No_OverTime")
+OTAnaly <- select(merge, -c(3))
+OTAnaly$Yes_OverTime <- OTAnaly$Yes_OverTime/2
+OTAnaly$perc <- OTAnaly$Yes_OverTime / (OTAnaly$No_OverTime + OTAnaly$Yes_OverTime)
+OTAnaly$perc <- percent(OTAnaly$perc)
+OTAnaly <- select(OTAnaly, -c(2,3))
+names(OTAnaly)[2] <- paste("% Who Work Overtime")
+
+# Calculating Attrition rate for each job role
+data$Attrition <- as.integer(data$Attrition)
+data_ATTY <- data %>%
+  filter(Attrition == 2) %>%
+  select(JobRole, Attrition)
+ATT2 <- aggregate(data_ATTY$Attrition, list(data_ATTY$JobRole), FUN=sum)
+
+data_ATTN <- data %>%
+  filter(Attrition == 1) %>%
+  select(JobRole, Attrition)
+ATT1 <- aggregate(data_ATTN$Attrition, list(data_ATTN$JobRole), FUN=sum)
+
+mergetemp <- cbind(ATT2, ATT1)
+names(mergetemp)[1] <- paste("Job Role")
+names(mergetemp)[2] <- paste("Yes_Attrition")
+names(mergetemp)[3] <- paste("delete")
+names(mergetemp)[4] <- paste("No_Attrition")
+ATTAnaly <- select(mergetemp, -c(3))
+ATTAnaly$Yes_Attrition <- ATTAnaly$Yes_Attrition/2
+ATTAnaly$perc <- ATTAnaly$Yes_Attrition / (ATTAnaly$No_Attrition + ATTAnaly$Yes_Attrition)
+ATTAnaly$perc <- percent(ATTAnaly$perc)
+ATTAnaly <- select(ATTAnaly, -c(2,3))
+names(ATTAnaly)[2] <- paste("Attrition Rate (%)")
+
+# Average Age by Job Role
+data_Age <- data %>%
+  select(JobRole, Age)
+AgeAvg <- aggregate(data_Age$Age, list(data_Age$JobRole), FUN=mean)
+AgeAvg$x <- round(AgeAvg$x, digits = 2)
+names(AgeAvg)[1] <- paste("Job Role")
+names(AgeAvg)[2] <- paste("Avg. Age")
+
+# Average Education level by Job Role
+data_Educ <- data %>%
+  select(JobRole, Education)
+EducAvg <- aggregate(data_Educ$Education, list(data_Educ$JobRole), FUN=mean)
+EducAvg$x <- round(EducAvg$x, digits = 2)
+names(EducAvg)[1] <- paste("Job Role")
+names(EducAvg)[2] <- paste("Avg. Educ. Level")
+
+# Average Environment Satisfaction
+data_EnvSat <- data %>%
+  select(JobRole, EnvironmentSatisfaction)
+EnvSatAvg <- aggregate(data_EnvSat$EnvironmentSatisfaction, list(data_EnvSat$JobRole), FUN=mean)
+EnvSatAvg$x <- round(EnvSatAvg$x, digits = 2)
+names(EnvSatAvg)[1] <- paste("Job Role")
+names(EnvSatAvg)[2] <- paste("Enviro. Sat.")
+
+# Average Monthly Income
+data_MoInc <- data %>%
+  select(JobRole, MonthlyIncome)
+MoIncAvg <- aggregate(data_MoInc$MonthlyIncome, list(data_MoInc$JobRole), FUN=mean)
+MoIncAvg$x <- comma(MoIncAvg$x, digits = 0)
+names(MoIncAvg)[1] <- paste("Job Role")
+names(MoIncAvg)[2] <- paste("Mo. Inc.")
+
+# Average Job Satisfaction
+data_JobSat <- data %>%
+  select(JobRole, JobSatisfaction)
+JobSatAvg <- aggregate(data_JobSat$JobSatisfaction, list(data_JobSat$JobRole), FUN=mean)
+JobSatAvg$x <- round(JobSatAvg$x, digits = 2)
+names(JobSatAvg)[1] <- paste("Job Role")
+names(JobSatAvg)[2] <- paste("Job Sat.")
+
+# Average Nummber of Companies Worked for
+data_NuCo <- data %>%
+  select(JobRole, NumCompaniesWorked)
+NuCoAvg <- aggregate(data_NuCo$NumCompaniesWorked, list(data_NuCo$JobRole), FUN=mean)
+NuCoAvg$x <- round(NuCoAvg$x, digits = 2)
+names(NuCoAvg)[1] <- paste("Job Role")
+names(NuCoAvg)[2] <- paste("Co. Work For")
+
+# Average Nummber of Total Years Worked
+data_TWoYr <- data %>%
+  select(JobRole, TotalWorkingYears)
+TWoYrAvg <- aggregate(data_TWoYr$TotalWorkingYears, list(data_TWoYr$JobRole), FUN=mean)
+TWoYrAvg$x <- round(TWoYrAvg$x, digits = 2)
+names(TWoYrAvg)[1] <- paste("Job Role")
+names(TWoYrAvg)[2] <- paste("Total Work Yrs")
+
+# Average Years at Company
+data_YrACo <- data %>%
+  select(JobRole, YearsAtCompany)
+YrACoAvg <- aggregate(data_YrACo$YearsAtCompany, list(data_YrACo$JobRole), FUN=mean)
+YrACoAvg$x <- round(YrACoAvg$x, digits = 2)
+names(YrACoAvg)[1] <- paste("Job Role")
+names(YrACoAvg)[2] <- paste("Yrs at Co.")
+
+# Average Years In Current Role
+data_YrsInRole <- data %>%
+  select(JobRole, YearsInCurrentRole)
+YrsInRoleAvg <- aggregate(data_YrsInRole$YearsInCurrentRole, list(data_YrsInRole$JobRole), FUN=mean)
+YrsInRoleAvg$x <- round(YrsInRoleAvg$x, digits = 2)
+names(YrsInRoleAvg)[1] <- paste("Job Role")
+names(YrsInRoleAvg)[2] <- paste("Yrs In Role")
+
+# Average Years Since Last Promotion
+data_YrsLastPro <- data %>%
+  select(JobRole, YearsSinceLastPromotion)
+YrsLastPro <- aggregate(data_YrsLastPro$YearsSinceLastPromotion, list(data_YrsLastPro$JobRole), FUN=mean)
+YrsLastPro$x <- round(YrsLastPro$x, digits = 2)
+names(YrsLastPro)[1] <- paste("Job Role")
+names(YrsLastPro)[2] <- paste("Yrs Since Promo.")
+
+# Merge list
+merge1 <- merge(ATTAnaly, OTAnaly)
+merge2 <- merge(merge1, AgeAvg)
+merge3 <- merge(merge2, EducAvg)
+merge4 <- merge(merge3, EnvSatAvg)
+merge5 <- merge(merge4, JobSatAvg)
+merge6 <- merge(merge5, MoIncAvg)
+merge7 <- merge(merge6, NuCoAvg)
+merge8 <- merge(merge7, TWoYrAvg)
+merge9 <- merge(merge8, YrACoAvg)
+merge10 <- merge(merge9, YrsInRoleAvg)
+merge11 <- merge(merge10, YrsLastPro)
+
+# Drop managers from list to be discussed next
+row.names.remove <- c(4)
+merge11[!(row.names(merge11) %in% row.names.remove),]
+
+formattable(merge11, align = c("l",rep("r", NCOL(merge10) - 1)), list(
+    `Job Role` = formatter("span", style = ~ style(color = "grey", font.weight = "bold")), 'Attrition Rate (%)' = color_bar("#FF9999"), 'Yrs at Co.' = color_bar("#00CC66")))
+
+```
+---
+#### The summary table above gives a brief overview of variables tied to each Job Role. This only incudes variables that showed variance. Some of the variables showed no real difference between the Job Roles and were excluded from the table above.
+#### Sales Reps have the highest attrition rate and percent of employees who work overtime yet they have the lowest average of age, education level and years at company.
+#### Healthcare Representatives have the highest average job satisfaction.
+#### Generally, it appears that younger employees have a higher attrition rate than older ones.
+
+## Manager Analysis
+```{r}
+# Select only managers from data
+Managers <- subset(data, data$JobRole == "Manager")
+
+# Manager Ages
+plot1 <- ggplot(Managers, aes(x = Age, color = Department, fill = Department)) +
+  geom_density(alpha = 0.3) + 
+  scale_x_continuous(breaks = c(0,5,10,15,20,25,30,35,40,45,50,55,60,65)) +
+  ylab("Density") + 
+  xlab("Age") +
+  ggtitle("Manager Ages") +
+  theme_bw()
+
+# Manager total working years
+plot2 <- ggplot(Managers, aes(x = TotalWorkingYears, color = Department, fill = Department)) +
+  geom_density(alpha = 0.3) + 
+  scale_x_continuous(breaks = c(0,5,10,15,20,25,30,35,40)) + 
+  ylab("Density") + 
+  xlab("Total Working Years") +
+  ggtitle("Managers Total Woring Years") +
+  theme_bw()
+
+# Manager Job Satisfaction
+plot3 <- ggplot(Managers, aes(x = JobSatisfaction, color = Department, fill = Department)) +
+  geom_density(alpha = 0.3) + 
+  ylab("Density") + 
+  xlab("Job Satisfaction") +
+  ggtitle("Manager Job Satisfaction") +
+  theme_bw()
+
+# Managers and Attrition Rates
+Managers$Attrition <- as.numeric(Managers$Attrition)
+Managers$Department <- as.numeric(Managers$Department)
+
+# No Attrition
+MANdata_percJIN <- Managers %>%
+  group_by(Attrition, Department) %>%
+  dplyr::summarise(n = n())
+MANdata_percJIN1 <- subset(MANdata_percJIN, MANdata_percJIN$Attrition == "1")
+MANdata_percJIN1P <- MANdata_percJIN1 %>%
+  group_by(Attrition, Department) %>%
+  ungroup() %>%
+  mutate(freq = n / sum(n))
+MANdata_percJIN1P$freq <- percent(MANdata_percJIN1P$freq)
+
+# Yes Attrition
+MANdata_percJIY <- Managers %>%
+  group_by(Attrition, Department) %>%
+  dplyr::summarise(n = n())
+MANdata_percJIY1 <- subset(MANdata_percJIY, MANdata_percJIY$Attrition == "2")
+MANdata_percJIY1P <- MANdata_percJIY1 %>%
+  group_by(Attrition, Department) %>%
+  ungroup() %>%
+  mutate(freq = n / sum(n))
+MANdata_percJIY1P$freq <- percent(MANdata_percJIY1P$freq)
+
+# Bind data sets
+MANdata_JIGraph <- rbind(MANdata_percJIN1P, MANdata_percJIY1P)
+
+# Graph
+plot4 <- ggplot(MANdata_JIGraph, aes(x=Attrition, y=freq, fill= factor(Department))) + 
+    geom_bar(position = "fill",stat = "identity", width = 0.7) +
+    labs(title = 'Manager Attrition Rate by Department', y='Ratio of Attrition', x='Attrition') + 
+    geom_text(aes(label = freq), position = position_fill(vjust = 0.5)) +
+    scale_fill_discrete(name="Department",
+                         breaks=c("1", "2", "3"),
+                         labels=c("HR", "R&D", "Sales")) +
+    scale_x_continuous(breaks = c(1,2), labels = c("No", "Yes")) + 
+    guides(fill=guide_legend(title="Department")) +
+    scale_y_continuous(breaks = c(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0)) + 
+    theme(legend.title=element_text(size = 9),plot.title=element_text(hjust=0.5)) + 
+    theme_bw()
+
+# Combine into 1 plot
+grid.arrange(plot1, plot2, plot3, plot4, ncol=2)
+```
+#### The majority of the manager ages fall between 40-55 and total working years between 20-30. The bottom left graph would indicate that job satisfaction is fairly even across the board with HR and Sales being primarily 2's. There is more variation in the Research and Development department with most of the job satisfaction either being a 1 or a 3.
+#### The bottom right graph shows attrition rates among managers by department. None of the HR Managers left the company in this dataset. Granted there were only 8 in the entire dataset it is still an interesting observation.
+
+# Building a model to predict Attrition!
+
+## Load in data to begin analysis
+```{r}
+# Build dataset
+nbdata <- data
+
+# Convert all variables to numeric EXCEPT Attrition
+nbdata$MaritalStatus <- as.numeric(nbdata$MaritalStatus)
+nbdata$OverTime <- as.numeric(nbdata$OverTime)
+nbdata$JobRole <- as.numeric(nbdata$JobRole)
+nbdata$BusinessTravel<- as.numeric(nbdata$BusinessTravel)
+nbdata$Department <- as.numeric(nbdata$Department)
+nbdata$EducationField <- as.numeric(nbdata$EducationField)
+nbdata$Gender <- as.numeric(nbdata$Gender)
+nbdata$Over18 <- as.numeric(nbdata$Over18)
+
+# Review data to make sure everything is formatted properly
+str(nbdata)
+
+# Reorder columns to have Attrition as the 1st column
+nbdata <- nbdata %>% select(Attrition, everything())
+
+```
+
+## Building the Model and Predict
+```{r}
+# Set Seed for reproducibility
+set.seed(7)
+
+# Create sample
+split <- sample(1:nrow(nbdata), 0.7 * nrow(nbdata))
+
+# Create training and test datasets (70/30 Split)
+train <- nbdata[split,]
+test <- nbdata[-split,]
+
+# Naive Bayes Model
+modelnb <- naiveBayes(train[,c(3:36)], as.factor(train$Attrition))
+
+# Confusion Matrix Output
+confusionMatrix(table(predict(modelnb, test[,c(3:36)]), as.factor(test$Attrition)))
+
+# Test on Competition Dataset
+compdata <- read.csv("D:/MS Data Science/SMU/6306 - Doing Data Science/Project 2/CaseStudy2CompSet No Attrition.csv", header = TRUE)
+
+compdata$MaritalStatus <- as.numeric(compdata$MaritalStatus)
+compdata$OverTime <- as.numeric(compdata$OverTime)
+compdata$JobRole <- as.numeric(compdata$JobRole)
+compdata$BusinessTravel<- as.numeric(compdata$BusinessTravel)
+compdata$Department <- as.numeric(compdata$Department)
+compdata$EducationField <- as.numeric(compdata$EducationField)
+compdata$Gender <- as.numeric(compdata$Gender)
+compdata$Over18 <- as.numeric(compdata$Over18)
+
+predict_attr <- as.data.frame(predict(modelnb, compdata))
+compdata <- cbind(compdata, predict_attr)
+write.csv(compdata, file = "D:/MS Data Science/SMU/6306 - Doing Data Science/Project 2/Case2PredictionsHuggins Attrition.csv")
+```
+#### This model is able to achive an 86% Overall accuracy with a Sensitivity of 89.7% and Sepecificity of 70.3%...Meaning that we are accurately able to predict when employees will stay with an 89% chance of being correct and predict if an employee will leave with a 70% chance of being correct.
+
+# Building a model to predict Monthly Income
+```{r}
+# Move MontlhyIncome to the front of the dataset to make it easier later on
+MIRegression <- datanum %>% select(MonthlyIncome, everything())
+
+# Correlation plot
+MIR <- cor(datanum, method = c("spearman"))
+corrplot(MIR, tl.cex = 0.5)
+
+# Which variables have the most correlation with monthly income
+cor(MIRegression[-1], MIRegression$MonthlyIncome) # correlate each varaible to Monthly Income
+```
+#### It looks like Age, Job Level, Total Working Years, Years at Company, Years in Current Role, Years Since Last Promotion and Years with Current Manager have the largest effect on Monthly Income. We will use these to build our regression model.
+
+## Start building the training model to utilize on the dataset
+```{r}
+# Subset data to only show the selected columns
+MIRsubset <- select(MIRegression, "MonthlyIncome", "Age", "JobLevel","TotalWorkingYears", "YearsAtCompany","YearsInCurrentRole", "YearsSinceLastPromotion", "YearsWithCurrManager")
+
+# Set Seed for reproducibility
+set.seed(7)
+
+# Create sample
+splitMIR <- sample(1:nrow(MIRsubset), 0.7 * nrow(MIRsubset))
+
+# Create training and test datasets (70/30 Split)
+trainMIR <- MIRsubset[split,]
+testMIR <- MIRsubset[-split,]
+
+# Regression Model
+fit <- lm(data = trainMIR, MonthlyIncome ~ JobLevel + TotalWorkingYears + YearsWithCurrManager)
+# After testing... YearsAtCompany did not change the RMSE or fit and was not statistically significant so I decided to drop it from the model.
+
+# Reveiew of covariance
+car::vif(fit)
+
+# Look at Model plots
+par(mfrow=c(2,2))
+plot(fit, which = 1:4)
+# The Residuals look okay, but not great. The QQPlot appears to be close enough to the line to proceed.
+
+# Take a look at the summary of the model
+summary(fit)
+
+# Calculate RMSE
+RMSE <- function(error) { sqrt(mean(error^2)) }
+RMSE(fit$residuals)
+
+# Test on Competition Dataset
+compdata2 <- read.csv("D:/MS Data Science/SMU/6306 - Doing Data Science/Project 2/CaseStudy2CompSet No Salary.csv", header = TRUE)
+
+# Predict the salaries
+predict_Salary <- as.data.frame(predict(fit, compdata2))
+
+# Add the salaries to the dataset and move to first column
+compdata2 <- cbind(compdata2, predict_Salary)
+
+# Write Out csv file
+write.csv(compdata2, file = "D:/MS Data Science/SMU/6306 - Doing Data Science/Project 2/Case2PredictionsHuggins Salary.csv")
+
+```
+#### The RMSE for this model is 1,381. The lower the number, the better the fit of the model. Our baseline RMSE that we needed to be under was 3,000 and we are well under that number.
+
