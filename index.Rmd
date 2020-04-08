@@ -1,0 +1,23 @@
+---
+title: "Paul Huggins"
+author: "Paul Huggins"
+date: "3/11/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+### A Little Background on Me
+My name is Paul Huggins and I was born in Grapevine, TX. I currently live in Rockwall, TX with my wife and our two children ages 2 and 6 months.
+
+When I'm not working or studying, I like to spend time with my family playing outside with our dogs or going golfing.
+
+Currently, I am working at R2Q Operating as a Production Analyst/Geologist at our corporate office located in Downtown Dallas.
+
+I hold a BS in Geology from The University of Arkansas (2014) and an MS in Earth and Environemental Science with a Petroeum Geoscience focus from the University of Texas at Arlington (2015).
+
+The following tab is an example of the work I have completed so far in the MSDS program at SMU.
+
+![](images/Paul_Headshot.jpeg)
+
+
