@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Paul Huggins" />
+
+
+<title>DDSAnalytics</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">About Me</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="Budweiser-Project_Final.html">Beer Study</a>
+</li>
+<li>
+  <a href="DDS_Project_2.html">Attrition</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">DDSAnalytics</h1>
+<h4 class="author">Paul Huggins</h4>
+<h4 class="date">3/22/2020</h4>
+
+</div>
+
+
+<div id="introduction-below-you-will-find-the-analysis-for-the-attrition-dataset.-the-goal-was-to-determine-what-causes-employee-attrition-and-subsequently-build-a-model-to-predict-it.-the-data-was-supplied-by-the-company-and-consisted-of-35-variables-each-with-a-uniqie-value-for-the-employee-it-is-referencing.-there-were-no-missing-variables-in-the-dataset-and-the-variables-consisted-of-both-numeric-and-categorical-forms." class="section level4">
+<h4>Introduction: Below you will find the analysis for the attrition dataset. The goal was to determine what causes employee attrition and subsequently build a model to predict it. The data was supplied by the company and consisted of 35 variables, each with a uniqie value for the employee it is referencing. There were no missing variables in the dataset and the variables consisted of both numeric and categorical forms.</h4>
+</div>
+<div id="project-goals" class="section level3">
+<h3>Project Goals:</h3>
+<div id="identify-the-top-three-factors-leading-to-attrition" class="section level4">
+<h4>Identify the top three factors leading to attrition</h4>
+</div>
+<div id="analyze-job-specific-trends" class="section level4">
+<h4>Analyze job specific trends</h4>
+</div>
+<div id="build-a-model-to-predict-attrition-and-monthly-income" class="section level4">
+<h4>Build a model to predict attrition and monthly income</h4>
+</div>
+</div>
+<div id="link-to-video-presentation-httpsyoutu.ben5ybft-drbi" class="section level3">
+<h3>Link to video presentation: <a href="https://youtu.be/N5Ybft-DrBI" class="uri">https://youtu.be/N5Ybft-DrBI</a></h3>
+</div>
+<div id="load-in-csvs.-view-the-format-of-the-data." class="section level2">
+<h2>Load in CSV’s. View the format of the data.</h2>
+<pre><code>## &#39;data.frame&#39;:    870 obs. of  36 variables:
+##  $ ID                      : int  1 2 3 4 5 6 7 8 9 10 ...
+##  $ Age                     : int  32 40 35 32 24 27 41 37 34 34 ...
+##  $ Attrition               : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ BusinessTravel          : Factor w/ 3 levels &quot;Non-Travel&quot;,&quot;Travel_Frequently&quot;,..: 3 3 2 3 2 2 3 3 3 2 ...
+##  $ DailyRate               : int  117 1308 200 801 567 294 1283 309 1333 653 ...
+##  $ Department              : Factor w/ 3 levels &quot;Human Resources&quot;,..: 3 2 2 3 2 2 2 3 3 2 ...
+##  $ DistanceFromHome        : int  13 14 18 1 2 10 5 10 10 10 ...
+##  $ Education               : int  4 3 2 4 1 2 5 4 4 4 ...
+##  $ EducationField          : Factor w/ 6 levels &quot;Human Resources&quot;,..: 2 4 2 3 6 2 4 2 2 6 ...
+##  $ EmployeeCount           : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ EmployeeNumber          : int  859 1128 1412 2016 1646 733 1448 1105 1055 1597 ...
+##  $ EnvironmentSatisfaction : int  2 3 3 3 1 4 2 4 3 4 ...
+##  $ Gender                  : Factor w/ 2 levels &quot;Female&quot;,&quot;Male&quot;: 2 2 2 1 1 2 2 1 1 2 ...
+##  $ HourlyRate              : int  73 44 60 48 32 32 90 88 87 92 ...
+##  $ JobInvolvement          : int  3 2 3 3 3 3 4 2 3 2 ...
+##  $ JobLevel                : int  2 5 3 3 1 3 1 2 1 2 ...
+##  $ JobRole                 : Factor w/ 9 levels &quot;Healthcare Representative&quot;,..: 8 6 5 8 7 5 7 8 9 1 ...
+##  $ JobSatisfaction         : int  4 3 4 4 4 1 3 4 3 3 ...
+##  $ MaritalStatus           : Factor w/ 3 levels &quot;Divorced&quot;,&quot;Married&quot;,..: 1 3 3 2 3 1 2 1 2 2 ...
+##  $ MonthlyIncome           : int  4403 19626 9362 10422 3760 8793 2127 6694 2220 5063 ...
+##  $ MonthlyRate             : int  9250 17544 19944 24032 17218 4809 5561 24223 18410 15332 ...
+##  $ NumCompaniesWorked      : int  2 1 2 1 1 1 2 2 1 1 ...
+##  $ Over18                  : Factor w/ 1 level &quot;Y&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ OverTime                : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 1 1 1 1 2 1 2 2 2 1 ...
+##  $ PercentSalaryHike       : int  11 14 11 19 13 21 12 14 19 14 ...
+##  $ PerformanceRating       : int  3 3 3 3 3 4 3 3 3 3 ...
+##  $ RelationshipSatisfaction: int  3 1 3 3 3 3 1 3 4 2 ...
+##  $ StandardHours           : int  80 80 80 80 80 80 80 80 80 80 ...
+##  $ StockOptionLevel        : int  1 0 0 2 0 2 0 3 1 1 ...
+##  $ TotalWorkingYears       : int  8 21 10 14 6 9 7 8 1 8 ...
+##  $ TrainingTimesLastYear   : int  3 2 2 3 2 4 5 5 2 3 ...
+##  $ WorkLifeBalance         : int  2 4 3 3 3 2 2 3 3 2 ...
+##  $ YearsAtCompany          : int  5 20 2 14 6 9 4 1 1 8 ...
+##  $ YearsInCurrentRole      : int  2 7 2 10 3 7 2 0 1 2 ...
+##  $ YearsSinceLastPromotion : int  0 4 2 5 1 1 0 0 0 7 ...
+##  $ YearsWithCurrManager    : int  3 9 2 7 3 7 3 0 0 7 ...</code></pre>
+<hr />
+</div>
+<div id="converting-all-categorical-variables-into-numeric-to-be-used-for-analysis-using-the-folowing-assignments" class="section level2">
+<h2>Converting all categorical variables into numeric to be used for analysis using the folowing assignments:</h2>
+<div id="attrition-1-no-2-yes" class="section level4">
+<h4>Attrition: 1 = No, 2 = Yes</h4>
+</div>
+<div id="business-travel-1-non-travel-2-travel-frequently-3-travel-rarely" class="section level4">
+<h4>Business Travel: 1 = Non-Travel, 2 = Travel Frequently, 3 = Travel Rarely</h4>
+</div>
+<div id="department-1-human-resources-2-research-development-3-sales" class="section level4">
+<h4>Department: 1 = Human Resources, 2 = Research &amp; Development, 3 = Sales</h4>
+</div>
+<div id="education-field-1-human-resources-2-life-sciences-3-marketing-4-medical-5-other-6-technical-degree" class="section level4">
+<h4>Education Field: 1 = Human Resources, 2 = Life Sciences, 3 = Marketing, 4 = Medical, 5 = Other, 6 = Technical Degree</h4>
+</div>
+<div id="gender-1-female-2-male" class="section level4">
+<h4>Gender: 1 = Female, 2 = Male</h4>
+</div>
+<div id="job-role-1-healthcare-representative-2-human-resources-3-laboratory-technician-4-manager-5-manufacturing-director-6-research-director-7-research-scientist-8-sales-executive-9-sales-representative" class="section level4">
+<h4>Job Role: 1 = Healthcare Representative, 2 = Human Resources, 3 = Laboratory Technician, 4 = Manager, 5 = Manufacturing Director, 6 = Research Director, 7 = Research Scientist, 8 = Sales Executive, 9 = Sales Representative</h4>
+</div>
+<div id="marital-status-1-divorced-2-married-3-single" class="section level4">
+<h4>Marital Status: 1 = Divorced, 2 = Married, 3 = Single</h4>
+</div>
+<div id="over-18-1-yes" class="section level4">
+<h4>Over 18: 1 = Yes</h4>
+</div>
+<div id="overtime-1-no-2-yes" class="section level4">
+<h4>Overtime: 1 = No, 2 = Yes</h4>
+<hr />
+</div>
+</div>
+<div id="what-is-the-base-attrition-rate" class="section level2">
+<h2>What is the base Attrition rate?</h2>
+<pre><code>## [1] &quot;There are 870 Employees in the data set&quot;</code></pre>
+<pre><code>## [1] &quot;Number of Employees that quit: 140&quot;</code></pre>
+<pre><code>## [1] &quot;Number of Employees that did not quit: 730&quot;</code></pre>
+<pre><code>## [1] &quot;Percent of Employees that quit: 16.09%&quot;</code></pre>
+<pre><code>## [1] &quot;Percent of Employees that did not quit: 83.91%&quot;</code></pre>
+<hr />
+</div>
+<div id="lets-begin-by-looking-broadly-at-attrition-by-job-role." class="section level2">
+<h2>Let’s begin by looking broadly at Attrition by Job Role.</h2>
+</div>
+<div id="section" class="section level2">
+<h2><img src="DDS_Project_2_files/figure-html/unnamed-chunk-5-1.png" width="672" /></h2>
+<div id="sales-representatives-have-the-highest-attrition-rate-at-45.-manufacturing-directors-and-research-directors-have-the-lowest-at-lesss-than-5." class="section level4">
+<h4>Sales Representatives have the highest attrition rate at 45%. Manufacturing Directors and Research Directors have the lowest at lesss than 5%.</h4>
+</div>
+</div>
+<div id="correlation---which-descriptive-measures-can-be-used-to-predict-attrition" class="section level2">
+<h2>Correlation - Which descriptive measures can be used to predict Attrition?</h2>
+<pre><code>##                                  [,1]
+## Age                      -0.149383577
+## BusinessTravel           -0.006125598
+## DailyRate                -0.033793125
+## Department                0.087031988
+## DistanceFromHome          0.087136293
+## Education                -0.049442357
+## EducationField            0.026142151
+## EmployeeCount                      NA
+## EmployeeNumber           -0.022793834
+## EnvironmentSatisfaction  -0.077325405
+## Gender                    0.025250336
+## HourlyRate                0.036554178
+## ID                        0.047266995
+## JobInvolvement           -0.187793409
+## JobLevel                 -0.162136444
+## JobRole                   0.090538602
+## JobSatisfaction          -0.107520935
+## MaritalStatus             0.197014951
+## MonthlyIncome            -0.154914955
+## MonthlyRate              -0.043232173
+## NumCompaniesWorked        0.061018887
+## Over18                             NA
+## OverTime                  0.272036591
+## PercentSalaryHike         0.015328069
+## PerformanceRating         0.015333837
+## RelationshipSatisfaction -0.039646611
+## StandardHours                      NA
+## StockOptionLevel         -0.148680303
+## TotalWorkingYears        -0.167206122
+## TrainingTimesLastYear    -0.062726088
+## WorkLifeBalance          -0.089789709
+## YearsAtCompany           -0.128754060
+## YearsInCurrentRole       -0.156215707
+## YearsSinceLastPromotion  -0.004573321
+## YearsWithCurrManager     -0.146782245</code></pre>
+<div id="the-top-3-indicators-of-attrition-are-overtime-0.27-marrital-status--0.19-and-job-involvement--0.18." class="section level4">
+<h4>The top 3 indicators of attrition are: Overtime (0.27), Marrital Status (-0.19) and Job Involvement (-0.18).</h4>
+<hr />
+</div>
+</div>
+<div id="lets-start-with-overtime-and-attrition." class="section level2">
+<h2>Lets start with Overtime and Attrition.</h2>
+</div>
+<div id="section-1" class="section level2">
+<h2><img src="DDS_Project_2_files/figure-html/unnamed-chunk-8-1.png" width="672" /></h2>
+<div id="employees-that-work-overtime-have-an-attrition-rate-that-is-34.58-higher-than-employees-that-do-not-work-overtime." class="section level4">
+<h4>Employees that work Overtime have an attrition rate that is 34.58% higher than employees that do not work overtime.</h4>
+</div>
+</div>
+<div id="secondly-lets-look-at-marital-status-and-attrition." class="section level2">
+<h2>Secondly, let’s look at Marital Status and Attrition.</h2>
+</div>
+<div id="section-2" class="section level2">
+<h2><img src="DDS_Project_2_files/figure-html/unnamed-chunk-9-1.png" width="672" /></h2>
+<div id="the-plot-would-suggest-that-single-employees-have-a-higher-rate-of-attrition-by-about-22-and-divorced-employees-have-a-lower-rate-of-attrition.-there-is-no-significant-change-in-attrition-for-married-employees." class="section level4">
+<h4>The plot would suggest that single employees have a higher rate of attrition by about 22% and divorced employees have a lower rate of attrition. There is no significant change in attrition for married employees.</h4>
+</div>
+</div>
+<div id="thirdly-job-involvement-and-attrition." class="section level2">
+<h2>Thirdly, Job Involvement and Attrition.</h2>
+</div>
+<div id="section-3" class="section level2">
+<h2><img src="DDS_Project_2_files/figure-html/unnamed-chunk-10-1.png" width="672" /></h2>
+<div id="employees-with-a-job-involvement-score-of-1-and-2-show-an-increase-in-attrition-rate.-employees-with-a-job-score-of-3-and-4-show-a-decrease-in-attrition." class="section level4">
+<h4>Employees with a job involvement score of 1 and 2 show an increase in attrition rate. Employees with a job score of 3 and 4 show a decrease in attrition.</h4>
+</div>
+</div>
+<div id="correlation-plot-of-the-other-7-variables-with-a-strong-relationship-to-attrition-for-reference." class="section level2">
+<h2>Correlation plot of the other 7 variables with a strong relationship to attrition for reference.</h2>
+</div>
+<div id="section-4" class="section level2">
+<h2><img src="DDS_Project_2_files/figure-html/unnamed-chunk-11-1.png" width="672" /></h2>
+<div id="some-other-variables-worth-exploring-are-total-working-years-years-in-current-role-and-job-role." class="section level4">
+<h4>Some other variables worth exploring are Total Working Years, Years in Current Role and Job Role.</h4>
+</div>
+</div>
+<div id="total-working-years-and-attrition" class="section level2">
+<h2>Total Working Years and Attrition</h2>
+</div>
+<div id="section-5" class="section level2">
+<h2><img src="DDS_Project_2_files/figure-html/unnamed-chunk-12-1.png" width="672" /></h2>
+<div id="employees-with-fewer-working-years-had-a-higher-percentage-chance-of-leaving-the-company." class="section level4">
+<h4>Employees with fewer working years had a higher percentage chance of leaving the company.</h4>
+</div>
+</div>
+<div id="years-in-current-role-and-attrition" class="section level2">
+<h2>Years in Current Role and Attrition</h2>
+</div>
+<div id="section-6" class="section level2">
+<h2><img src="DDS_Project_2_files/figure-html/unnamed-chunk-13-1.png" width="672" /></h2>
+<div id="employees-who-were-with-the-company-for-less-than-a-year-2-years-and-7-years-had-the-highest-attrition-rates." class="section level4">
+<h4>Employees who were with the company for less than a year, 2 years and 7 years had the highest attrition rates.</h4>
+</div>
+</div>
+<div id="job-role-and-attrition" class="section level2">
+<h2>Job Role and Attrition</h2>
+</div>
+<div id="section-7" class="section level2">
+<h2><img src="DDS_Project_2_files/figure-html/unnamed-chunk-14-1.png" width="672" /></h2>
+<div id="sales-representatives-and-laboratory-technicians-have-the-largest-percentage-chance-of-leaving-the-company.-these-can-sometimes-be-highturnover-positions-in-the-indsutry-but-that-is-not-stated-in-the-company-context." class="section level4">
+<h4>Sales Representatives and Laboratory Technicians have the largest percentage chance of leaving the company. These can sometimes be highturnover positions in the indsutry, but that is not stated in the company context.</h4>
+</div>
+</div>
+<div id="job-role-specific-trends" class="section level1">
+<h1>Job Role Specific Trends</h1>
+<div id="correlation---what-variables-provide-the-most-information-about-job-role" class="section level2">
+<h2>Correlation - What variables provide the most information about Job Role?</h2>
+<pre><code>##                                  [,1]
+## Age                      -0.105969885
+## Attrition                 0.090538602
+## BusinessTravel           -0.024285473
+## DailyRate                 0.006317723
+## Department                0.666858216
+## DistanceFromHome         -0.012799586
+## Education                 0.063075019
+## EducationField           -0.018664925
+## EmployeeCount                      NA
+## EmployeeNumber           -0.051991261
+## EnvironmentSatisfaction  -0.051917531
+## Gender                   -0.017882143
+## HourlyRate               -0.018204832
+## ID                       -0.069017184
+## JobInvolvement           -0.011426141
+## JobLevel                 -0.074299446
+## JobSatisfaction           0.008906795
+## MaritalStatus             0.048785430
+## MonthlyIncome            -0.075165525
+## MonthlyRate              -0.013817053
+## NumCompaniesWorked       -0.008968013
+## Over18                             NA
+## OverTime                  0.080699746
+## PercentSalaryHike        -0.004581115
+## PerformanceRating        -0.030687047
+## RelationshipSatisfaction -0.021511456
+## StandardHours                      NA
+## StockOptionLevel         -0.031362324
+## TotalWorkingYears        -0.133122913
+## TrainingTimesLastYear    -0.034165342
+## WorkLifeBalance           0.025982297
+## YearsAtCompany           -0.091223937
+## YearsInCurrentRole       -0.035873768
+## YearsSinceLastPromotion  -0.043979111
+## YearsWithCurrManager     -0.048441140</code></pre>
+<div id="the-top-3-descriptors-of-job-role-are-department-0.66-total-working-years--0.13-and-age--0.10." class="section level4">
+<h4>The top 3 descriptors of Job Role are: Department (0.66), Total Working Years (-0.13) and Age (-0.10).</h4>
+</div>
+<div id="department-and-job-role-go-hand-in-hand-so-we-will-not-explore-this-relationship.-we-will-explore-total-working-years-age-gender-and-overtime." class="section level4">
+<h4>Department and Job Role go hand in hand so we will not explore this relationship. We will explore Total Working Years, Age, Gender and Overtime.</h4>
+</div>
+</div>
+<div id="job-roles-and-total-working-years" class="section level2">
+<h2>Job Roles and Total Working Years</h2>
+</div>
+<div id="section-8" class="section level2">
+<h2><img src="DDS_Project_2_files/figure-html/unnamed-chunk-16-1.png" width="672" /></h2>
+<div id="sales-representatives-have-the-lowest-average-total-working-years.-this-might-attribute-to-the-higher-attrition-rates-seen-previously.-manufacturing-directors-and-research-directors-have-accumulated-the-most-total-working-years." class="section level4">
+<h4>Sales Representatives have the lowest average Total Working Years. This might attribute to the higher attrition rates seen previously. Manufacturing Directors and Research Directors have accumulated the most Total Working Years.</h4>
+</div>
+</div>
+<div id="job-roles-and-age" class="section level2">
+<h2>Job Roles and Age</h2>
+</div>
+<div id="section-9" class="section level2">
+<h2><img src="DDS_Project_2_files/figure-html/unnamed-chunk-17-1.png" width="672" /></h2>
+<div id="there-is-a-faily-even-distribution-of-the-average-ages-per-job-role.-the-only-exception-is-managers-who-have-a-higher-average-age-of-around-47.-laboratory-technicians-have-the-lowest-average-age-of-around-28." class="section level4">
+<h4>There is a faily even distribution of the average ages per job role. The only exception is Managers who have a higher average age of around 47. Laboratory Technicians have the lowest average age of around 28.</h4>
+</div>
+</div>
+<div id="job-roles-and-gender" class="section level2">
+<h2>Job Roles and Gender</h2>
+</div>
+<div id="section-10" class="section level2">
+<h2><img src="DDS_Project_2_files/figure-html/unnamed-chunk-18-1.png" width="672" /></h2>
+<div id="there-is-fairly-even-gender-equality-in-management-roles-manager-director.-human-resources-laboratory-technicians-research-scientists-sales-executives-are-predominantly-male-roles." class="section level4">
+<h4>There is fairly even gender equality in management roles (Manager, Director). Human Resources, Laboratory Technicians, Research Scientists &amp; Sales Executives are predominantly male roles.</h4>
+</div>
+</div>
+<div id="job-roles-summary---averages" class="section level2">
+<h2>Job Roles Summary - Averages</h2>
+<pre><code>##                    Job Role Attrition Rate (%) % Who Work Overtime Avg. Age Avg. Educ. Level
+## 1 Healthcare Representative             10.53%              28.95%    39.25             2.87
+## 2           Human Resources             22.22%              22.22%    34.11             2.56
+## 3     Laboratory Technician             19.61%              21.57%    34.13             2.71
+## 5    Manufacturing Director              2.30%              26.44%    38.25             2.82
+## 6         Research Director              1.96%              31.37%    43.69             3.33
+## 7        Research Scientist             18.60%              37.79%    34.76             2.94
+## 8           Sales Executive             16.50%              29.50%    36.70             3.08
+## 9      Sales Representative             45.28%              33.96%    30.49             2.45
+##   Enviro. Sat. Job Sat. Mo. Inc. Co. Work For Total Work Yrs Yrs at Co. Yrs In Role Yrs Since Promo.
+## 1         2.75     2.83    7,435         2.63          13.76       8.74        4.80             3.07
+## 2         2.70     2.56    3,285         2.15           6.11       4.59        2.70             1.26
+## 3         2.79     2.69    3,222         2.58           7.88       5.33        3.31             1.46
+## 5         3.00     2.72    7,505         2.67          12.40       7.90        5.47             2.32
+## 6         2.45     2.49   15,750         3.73          20.98      10.24        5.80             2.63
+## 7         2.63     2.80    3,259         2.80           7.74       5.11        3.20             1.56
+## 8         2.64     2.73    6,892         2.77          11.12       7.54        4.75             2.51
+## 9         2.66     2.70    2,653         1.62           4.43       2.92        2.11             1.15</code></pre>
+<table class="table table-condensed">
+<thead>
+<tr>
+<th style="text-align:left;">
+Job Role
+</th>
+<th style="text-align:right;">
+Attrition Rate (%)
+</th>
+<th style="text-align:right;">
+% Who Work Overtime
+</th>
+<th style="text-align:right;">
+Avg. Age
+</th>
+<th style="text-align:right;">
+Avg. Educ. Level
+</th>
+<th style="text-align:right;">
+Enviro. Sat.
+</th>
+<th style="text-align:right;">
+Job Sat.
+</th>
+<th style="text-align:right;">
+Mo. Inc. 
+</th>
+<th style="text-align:right;">
+Co. Work For
+</th>
+<th style="text-align:right;">
+Total Work Yrs
+</th>
+<th style="text-align:right;">
+Yrs at Co. 
+</th>
+<th style="text-align:right;">
+Yrs In Role
+</th>
+<th style="text-align:left;">
+Yrs Since Promo.
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+<span style="color: grey; font-weight: bold">Healthcare Representative</span>
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #FF9999; width: 23.25%">10.53%</span>
+</td>
+<td style="text-align:right;">
+28.95%
+</td>
+<td style="text-align:right;">
+39.25
+</td>
+<td style="text-align:right;">
+2.87
+</td>
+<td style="text-align:right;">
+2.75
+</td>
+<td style="text-align:right;">
+2.83
+</td>
+<td style="text-align:right;">
+7,435
+</td>
+<td style="text-align:right;">
+2.63
+</td>
+<td style="text-align:right;">
+13.76
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #00CC66; width: 63.43%">8.74</span>
+</td>
+<td style="text-align:right;">
+4.80
+</td>
+<td style="text-align:left;">
+3.07
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="color: grey; font-weight: bold">Human Resources </span>
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #FF9999; width: 49.07%">22.22%</span>
+</td>
+<td style="text-align:right;">
+22.22%
+</td>
+<td style="text-align:right;">
+34.11
+</td>
+<td style="text-align:right;">
+2.56
+</td>
+<td style="text-align:right;">
+2.70
+</td>
+<td style="text-align:right;">
+2.56
+</td>
+<td style="text-align:right;">
+3,285
+</td>
+<td style="text-align:right;">
+2.15
+</td>
+<td style="text-align:right;">
+6.11
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #00CC66; width: 33.31%">4.59</span>
+</td>
+<td style="text-align:right;">
+2.70
+</td>
+<td style="text-align:left;">
+1.26
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="color: grey; font-weight: bold">Laboratory Technician </span>
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #FF9999; width: 43.30%">19.61%</span>
+</td>
+<td style="text-align:right;">
+21.57%
+</td>
+<td style="text-align:right;">
+34.13
+</td>
+<td style="text-align:right;">
+2.71
+</td>
+<td style="text-align:right;">
+2.79
+</td>
+<td style="text-align:right;">
+2.69
+</td>
+<td style="text-align:right;">
+3,222
+</td>
+<td style="text-align:right;">
+2.58
+</td>
+<td style="text-align:right;">
+7.88
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #00CC66; width: 38.68%">5.33</span>
+</td>
+<td style="text-align:right;">
+3.31
+</td>
+<td style="text-align:left;">
+1.46
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="color: grey; font-weight: bold">Manager </span>
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #FF9999; width: 17.32%">7.84%</span>
+</td>
+<td style="text-align:right;">
+19.61%
+</td>
+<td style="text-align:right;">
+47.55
+</td>
+<td style="text-align:right;">
+3.06
+</td>
+<td style="text-align:right;">
+2.63
+</td>
+<td style="text-align:right;">
+2.51
+</td>
+<td style="text-align:right;">
+17,197
+</td>
+<td style="text-align:right;">
+3.45
+</td>
+<td style="text-align:right;">
+24.69
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #00CC66; width: 100.00%">13.78</span>
+</td>
+<td style="text-align:right;">
+6.43
+</td>
+<td style="text-align:left;">
+4.49
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="color: grey; font-weight: bold">Manufacturing Director </span>
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #FF9999; width: 5.08%">2.30%</span>
+</td>
+<td style="text-align:right;">
+26.44%
+</td>
+<td style="text-align:right;">
+38.25
+</td>
+<td style="text-align:right;">
+2.82
+</td>
+<td style="text-align:right;">
+3.00
+</td>
+<td style="text-align:right;">
+2.72
+</td>
+<td style="text-align:right;">
+7,505
+</td>
+<td style="text-align:right;">
+2.67
+</td>
+<td style="text-align:right;">
+12.40
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #00CC66; width: 57.33%">7.90</span>
+</td>
+<td style="text-align:right;">
+5.47
+</td>
+<td style="text-align:left;">
+2.32
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="color: grey; font-weight: bold">Research Director </span>
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #FF9999; width: 4.33%">1.96%</span>
+</td>
+<td style="text-align:right;">
+31.37%
+</td>
+<td style="text-align:right;">
+43.69
+</td>
+<td style="text-align:right;">
+3.33
+</td>
+<td style="text-align:right;">
+2.45
+</td>
+<td style="text-align:right;">
+2.49
+</td>
+<td style="text-align:right;">
+15,750
+</td>
+<td style="text-align:right;">
+3.73
+</td>
+<td style="text-align:right;">
+20.98
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #00CC66; width: 74.31%">10.24</span>
+</td>
+<td style="text-align:right;">
+5.80
+</td>
+<td style="text-align:left;">
+2.63
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="color: grey; font-weight: bold">Research Scientist </span>
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #FF9999; width: 41.09%">18.60%</span>
+</td>
+<td style="text-align:right;">
+37.79%
+</td>
+<td style="text-align:right;">
+34.76
+</td>
+<td style="text-align:right;">
+2.94
+</td>
+<td style="text-align:right;">
+2.63
+</td>
+<td style="text-align:right;">
+2.80
+</td>
+<td style="text-align:right;">
+3,259
+</td>
+<td style="text-align:right;">
+2.80
+</td>
+<td style="text-align:right;">
+7.74
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #00CC66; width: 37.08%">5.11</span>
+</td>
+<td style="text-align:right;">
+3.20
+</td>
+<td style="text-align:left;">
+1.56
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="color: grey; font-weight: bold">Sales Executive </span>
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #FF9999; width: 36.44%">16.50%</span>
+</td>
+<td style="text-align:right;">
+29.50%
+</td>
+<td style="text-align:right;">
+36.70
+</td>
+<td style="text-align:right;">
+3.08
+</td>
+<td style="text-align:right;">
+2.64
+</td>
+<td style="text-align:right;">
+2.73
+</td>
+<td style="text-align:right;">
+6,892
+</td>
+<td style="text-align:right;">
+2.77
+</td>
+<td style="text-align:right;">
+11.12
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #00CC66; width: 54.72%">7.54</span>
+</td>
+<td style="text-align:right;">
+4.75
+</td>
+<td style="text-align:left;">
+2.51
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span style="color: grey; font-weight: bold">Sales Representative </span>
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #FF9999; width: 100.00%">45.28%</span>
+</td>
+<td style="text-align:right;">
+33.96%
+</td>
+<td style="text-align:right;">
+30.49
+</td>
+<td style="text-align:right;">
+2.45
+</td>
+<td style="text-align:right;">
+2.66
+</td>
+<td style="text-align:right;">
+2.70
+</td>
+<td style="text-align:right;">
+2,653
+</td>
+<td style="text-align:right;">
+1.62
+</td>
+<td style="text-align:right;">
+4.43
+</td>
+<td style="text-align:right;">
+<span style="display: inline-block; direction: rtl; border-radius: 4px; padding-right: 2px; background-color: #00CC66; width: 21.19%">2.92</span>
+</td>
+<td style="text-align:right;">
+2.11
+</td>
+<td style="text-align:left;">
+1.15
+</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<div id="the-summary-table-above-gives-a-brief-overview-of-variables-tied-to-each-job-role.-this-only-incudes-variables-that-showed-variance.-some-of-the-variables-showed-no-real-difference-between-the-job-roles-and-were-excluded-from-the-table-above." class="section level4">
+<h4>The summary table above gives a brief overview of variables tied to each Job Role. This only incudes variables that showed variance. Some of the variables showed no real difference between the Job Roles and were excluded from the table above.</h4>
+</div>
+<div id="sales-reps-have-the-highest-attrition-rate-and-percent-of-employees-who-work-overtime-yet-they-have-the-lowest-average-of-age-education-level-and-years-at-company." class="section level4">
+<h4>Sales Reps have the highest attrition rate and percent of employees who work overtime yet they have the lowest average of age, education level and years at company.</h4>
+</div>
+<div id="healthcare-representatives-have-the-highest-average-job-satisfaction." class="section level4">
+<h4>Healthcare Representatives have the highest average job satisfaction.</h4>
+</div>
+<div id="generally-it-appears-that-younger-employees-have-a-higher-attrition-rate-than-older-ones." class="section level4">
+<h4>Generally, it appears that younger employees have a higher attrition rate than older ones.</h4>
+</div>
+</div>
+<div id="manager-analysis" class="section level2">
+<h2>Manager Analysis</h2>
+<p><img src="DDS_Project_2_files/figure-html/unnamed-chunk-20-1.png" width="672" /> #### The majority of the manager ages fall between 40-55 and total working years between 20-30. The bottom left graph would indicate that job satisfaction is fairly even across the board with HR and Sales being primarily 2’s. There is more variation in the Research and Development department with most of the job satisfaction either being a 1 or a 3. #### The bottom right graph shows attrition rates among managers by department. None of the HR Managers left the company in this dataset. Granted there were only 8 in the entire dataset it is still an interesting observation.</p>
+</div>
+</div>
+<div id="building-a-model-to-predict-attrition" class="section level1">
+<h1>Building a model to predict Attrition!</h1>
+<div id="load-in-data-to-begin-analysis" class="section level2">
+<h2>Load in data to begin analysis</h2>
+<pre><code>## &#39;data.frame&#39;:    870 obs. of  38 variables:
+##  $ ID                      : int  1 2 3 4 5 6 7 8 9 10 ...
+##  $ Age                     : int  32 40 35 32 24 27 41 37 34 34 ...
+##  $ Attrition               : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ BusinessTravel          : num  3 3 2 3 2 2 3 3 3 2 ...
+##  $ DailyRate               : int  117 1308 200 801 567 294 1283 309 1333 653 ...
+##  $ Department              : num  3 2 2 3 2 2 2 3 3 2 ...
+##  $ DistanceFromHome        : int  13 14 18 1 2 10 5 10 10 10 ...
+##  $ Education               : int  4 3 2 4 1 2 5 4 4 4 ...
+##  $ EducationField          : num  2 4 2 3 6 2 4 2 2 6 ...
+##  $ EmployeeCount           : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ EmployeeNumber          : int  859 1128 1412 2016 1646 733 1448 1105 1055 1597 ...
+##  $ EnvironmentSatisfaction : int  2 3 3 3 1 4 2 4 3 4 ...
+##  $ Gender                  : num  2 2 2 1 1 2 2 1 1 2 ...
+##  $ HourlyRate              : int  73 44 60 48 32 32 90 88 87 92 ...
+##  $ JobInvolvement          : int  3 2 3 3 3 3 4 2 3 2 ...
+##  $ JobLevel                : int  2 5 3 3 1 3 1 2 1 2 ...
+##  $ JobRole                 : num  8 6 5 8 7 5 7 8 9 1 ...
+##  $ JobSatisfaction         : int  4 3 4 4 4 1 3 4 3 3 ...
+##  $ MaritalStatus           : num  1 3 3 2 3 1 2 1 2 2 ...
+##  $ MonthlyIncome           : int  4403 19626 9362 10422 3760 8793 2127 6694 2220 5063 ...
+##  $ MonthlyRate             : int  9250 17544 19944 24032 17218 4809 5561 24223 18410 15332 ...
+##  $ NumCompaniesWorked      : int  2 1 2 1 1 1 2 2 1 1 ...
+##  $ Over18                  : num  1 1 1 1 1 1 1 1 1 1 ...
+##  $ OverTime                : num  1 1 1 1 2 1 2 2 2 1 ...
+##  $ PercentSalaryHike       : int  11 14 11 19 13 21 12 14 19 14 ...
+##  $ PerformanceRating       : int  3 3 3 3 3 4 3 3 3 3 ...
+##  $ RelationshipSatisfaction: int  3 1 3 3 3 3 1 3 4 2 ...
+##  $ StandardHours           : int  80 80 80 80 80 80 80 80 80 80 ...
+##  $ StockOptionLevel        : int  1 0 0 2 0 2 0 3 1 1 ...
+##  $ TotalWorkingYears       : int  8 21 10 14 6 9 7 8 1 8 ...
+##  $ TrainingTimesLastYear   : int  3 2 2 3 2 4 5 5 2 3 ...
+##  $ WorkLifeBalance         : int  2 4 3 3 3 2 2 3 3 2 ...
+##  $ YearsAtCompany          : int  5 20 2 14 6 9 4 1 1 8 ...
+##  $ YearsInCurrentRole      : int  2 7 2 10 3 7 2 0 1 2 ...
+##  $ YearsSinceLastPromotion : int  0 4 2 5 1 1 0 0 0 7 ...
+##  $ YearsWithCurrManager    : int  3 9 2 7 3 7 3 0 0 7 ...
+##  $ JobRole_short           : Factor w/ 9 levels &quot;Health Rep&quot;,&quot;HR&quot;,..: 8 6 5 8 7 5 7 8 9 1 ...
+##  $ Gender_short            : Factor w/ 2 levels &quot;F&quot;,&quot;M&quot;: 2 2 2 1 1 2 2 1 1 2 ...</code></pre>
+</div>
+<div id="building-the-model-and-predict" class="section level2">
+<h2>Building the Model and Predict</h2>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##    
+##       1   2
+##   1 201  11
+##   2  23  26
+##                                           
+##                Accuracy : 0.8697          
+##                  95% CI : (0.8227, 0.9081)
+##     No Information Rate : 0.8582          
+##     P-Value [Acc &gt; NIR] : 0.33494         
+##                                           
+##                   Kappa : 0.5285          
+##                                           
+##  Mcnemar&#39;s Test P-Value : 0.05923         
+##                                           
+##             Sensitivity : 0.8973          
+##             Specificity : 0.7027          
+##          Pos Pred Value : 0.9481          
+##          Neg Pred Value : 0.5306          
+##              Prevalence : 0.8582          
+##          Detection Rate : 0.7701          
+##    Detection Prevalence : 0.8123          
+##       Balanced Accuracy : 0.8000          
+##                                           
+##        &#39;Positive&#39; Class : 1               
+## </code></pre>
+<div id="this-model-is-able-to-achive-an-86-overall-accuracy-with-a-sensitivity-of-89.7-and-sepecificity-of-70.3meaning-that-we-are-accurately-able-to-predict-when-employees-will-stay-with-an-89-chance-of-being-correct-and-predict-if-an-employee-will-leave-with-a-70-chance-of-being-correct." class="section level4">
+<h4>This model is able to achive an 86% Overall accuracy with a Sensitivity of 89.7% and Sepecificity of 70.3%…Meaning that we are accurately able to predict when employees will stay with an 89% chance of being correct and predict if an employee will leave with a 70% chance of being correct.</h4>
+</div>
+</div>
+</div>
+<div id="building-a-model-to-predict-monthly-income" class="section level1">
+<h1>Building a model to predict Monthly Income</h1>
+<p><img src="DDS_Project_2_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<pre><code>##                                   [,1]
+## Age                       4.842883e-01
+## Attrition                -1.549150e-01
+## BusinessTravel            6.270690e-02
+## DailyRate                 8.790339e-05
+## Department                4.511141e-02
+## DistanceFromHome         -6.667155e-03
+## Education                 1.271314e-01
+## EducationField           -3.953148e-02
+## EmployeeCount                       NA
+## EmployeeNumber            3.420305e-02
+## EnvironmentSatisfaction  -1.687744e-02
+## Gender                   -5.515709e-02
+## HourlyRate                2.391151e-03
+## ID                       -5.163903e-02
+## JobInvolvement            4.473792e-04
+## JobLevel                  9.516400e-01
+## JobRole                  -7.516553e-02
+## JobSatisfaction          -5.314853e-02
+## MaritalStatus            -7.167183e-02
+## MonthlyRate               6.459407e-02
+## NumCompaniesWorked        1.558943e-01
+## Over18                              NA
+## OverTime                 -2.526885e-02
+## PercentSalaryHike        -5.386594e-02
+## PerformanceRating        -4.313100e-02
+## RelationshipSatisfaction -3.884678e-03
+## StandardHours                       NA
+## StockOptionLevel          1.888872e-02
+## TotalWorkingYears         7.785112e-01
+## TrainingTimesLastYear    -3.901457e-02
+## WorkLifeBalance           2.080489e-02
+## YearsAtCompany            4.913790e-01
+## YearsInCurrentRole        3.618405e-01
+## YearsSinceLastPromotion   3.159116e-01
+## YearsWithCurrManager      3.284875e-01</code></pre>
+<div id="it-looks-like-age-job-level-total-working-years-years-at-company-years-in-current-role-years-since-last-promotion-and-years-with-current-manager-have-the-largest-effect-on-monthly-income.-we-will-use-these-to-build-our-regression-model." class="section level4">
+<h4>It looks like Age, Job Level, Total Working Years, Years at Company, Years in Current Role, Years Since Last Promotion and Years with Current Manager have the largest effect on Monthly Income. We will use these to build our regression model.</h4>
+</div>
+<div id="start-building-the-training-model-to-utilize-on-the-dataset" class="section level2">
+<h2>Start building the training model to utilize on the dataset</h2>
+<pre><code>##             JobLevel    TotalWorkingYears YearsWithCurrManager 
+##             2.530831             2.851629             1.316559</code></pre>
+<p><img src="DDS_Project_2_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<pre><code>## 
+## Call:
+## lm(formula = MonthlyIncome ~ JobLevel + TotalWorkingYears + YearsWithCurrManager, 
+##     data = trainMIR)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -5241.1  -878.2   -12.6   731.6  3923.6 
+## 
+## Coefficients:
+##                      Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)          -1651.20     121.42 -13.599  &lt; 2e-16 ***
+## JobLevel              3711.38      80.50  46.105  &lt; 2e-16 ***
+## TotalWorkingYears       73.45      12.26   5.993 3.54e-09 ***
+## YearsWithCurrManager   -72.25      17.92  -4.031 6.26e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 1388 on 605 degrees of freedom
+## Multiple R-squared:  0.9131, Adjusted R-squared:  0.9126 
+## F-statistic:  2118 on 3 and 605 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre><code>## [1] 1382.998</code></pre>
+<div id="the-rmse-for-this-model-is-1381.-the-lower-the-number-the-better-the-fit-of-the-model.-our-baseline-rmse-that-we-needed-to-be-under-was-3000-and-we-are-well-under-that-number." class="section level4">
+<h4>The RMSE for this model is 1,381. The lower the number, the better the fit of the model. Our baseline RMSE that we needed to be under was 3,000 and we are well under that number.</h4>
+</div>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

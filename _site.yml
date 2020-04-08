@@ -1,0 +1,11 @@
+name: "my-website"
+navbar:
+  title: "About Me"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Beer Study"
+      href: Budweiser-Project_Final.html
+    - text: "Attrition"
+      href: DDS_Project_2.html
+
