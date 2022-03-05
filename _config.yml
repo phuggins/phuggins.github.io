@@ -103,7 +103,7 @@ analytics:
 # Site Author
 author:
   name             : "Paul Huggins"
-  avatar           : /assets/images/Paul_Headshot.jpeg"
+  avatar           : /assets/images/Paul_Headshot.jpg"
   bio              : "Data Engineer - Data Scientist Enthuasist"
   location         : "DFW - Texas"
   email            :
