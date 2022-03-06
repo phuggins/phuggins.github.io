@@ -104,9 +104,9 @@ analytics:
 author:
   name             : "Paul Huggins"
   avatar           : "/assets/images/Paul_Headshot.jpg"
-  bio              : "Data engineer + scientist, consulting background.
-                      MS Data Science & ML : Southern Methodist Unversity (2021)
-                      MS Petroleum Geology : Unversity of Texas - Arlington (2015)
+  bio              : "Data engineer + scientist, consulting background. \
+                      MS Data Science & ML : Southern Methodist Unversity (2021) \
+                      MS Petroleum Geology : Unversity of Texas - Arlington (2015) \
                       BS Geology : University of Arkansas (2014)"
   location         : "DFW, Texas USA"
   email            :
