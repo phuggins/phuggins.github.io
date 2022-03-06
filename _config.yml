@@ -16,7 +16,7 @@ minimal_mistakes_skin    : "dark" # "air", "aqua", "contrast", "dark", "dirt", "
 
 # Site Settings
 locale                   : "en-US"
-title                    : "Paul Huggins - Data Scientist"
+title                    : "Paul Huggins"
 title_separator          : "-"
 subtitle                 : # site tagline that appears below site title in masthead
 name                     : "Paul Huggins"
@@ -104,7 +104,10 @@ analytics:
 author:
   name             : "Paul Huggins"
   avatar           : "/assets/images/Paul_Headshot.jpg"
-  bio              : "Data Engineer, Data Scientist, consulting background"
+  bio              : "Data engineer + scientist, consulting background.
+                      MS Data Science & ML : Southern Methodist Unversity (2021)
+                      MS Petroleum Geology : Unversity of Texas - Arlington (2015)
+                      BS Geology : University of Arkansas (2014)"
   location         : "DFW, Texas USA"
   email            :
   links:
