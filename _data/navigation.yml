@@ -1,5 +1,7 @@
 # main links
 main:
+  - title: "Background"
+  #   url: https://mmistakes.github.io/minimal-mistakes/docs/quick-start-guide/
   - title: "Projects"
   #   url: https://mmistakes.github.io/minimal-mistakes/docs/quick-start-guide/
   - title: "Digital Resume"
