@@ -130,6 +130,7 @@ author:
 # Site Header
 header:
   image: /assets/images/alex-wong-l5Tzv1alcps-unsplash.jpg
+  caption: "Photo credit: [**Unsplash**](https://unsplash.com)"
 
 # Site Footer
 footer:
