@@ -4,8 +4,8 @@ main:
   #   url: https://mmistakes.github.io/minimal-mistakes/docs/quick-start-guide/
   - title: "Digital Resume"
     url: /assets/images/Paul_Huggins_Resume.jpg
-  # - title: "Sample Posts"
-  #   url: /year-archive/
+  - title: "Bored? Play Snake!"
+    url: /assets/snake.html
   # - title: "Sample Collections"
   #   url: /collection-archive/
   # - title: "Sitemap"
