@@ -16,9 +16,9 @@ minimal_mistakes_skin    : "air" # "air", "aqua", "contrast", "dark", "dirt", "n
 
 # Site Settings
 locale                   : "en-US"
-title                    : "Paul Huggins"
+title                    : "Paul Huggins - Data Scientist"
 title_separator          : "-"
-subtitle                 : "Timetraveling, golf loving, family man looking at data" # site tagline that appears below site title in masthead
+subtitle                 : # site tagline that appears below site title in masthead
 name                     : "Paul Huggins"
 description              : # "TO-DO"
 url                      : # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
@@ -104,7 +104,7 @@ analytics:
 author:
   name             : "Paul Huggins"
   avatar           : "/assets/images/Paul_Headshot.jpg"
-  bio              : "Data Engineer - Data Scientist"
+  bio              : "Timetraveling, golf loving, family man looking at data"
   location         : "DFW, Texas USA"
   email            :
   links:
