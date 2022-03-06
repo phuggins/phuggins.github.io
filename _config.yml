@@ -129,7 +129,7 @@ author:
 
 # Site Header
 header:
-  image: "/assets/images/alex-wong-l5Tzv1alcps-unsplash.jpg"
+  image: /assets/images/alex-wong-l5Tzv1alcps-unsplash.jpg
 
 # Site Footer
 footer:
